@@ -1,7 +1,11 @@
-Data Tools
-==========
+"d" for "Data Tools"
+====================
 
-Data tools is a commandline-first library, written in Python which makes data-wrangling easy.
+Data tools (or, for friend, `d`) is a command-line-first data analysis
+library. The goal of the library is to make data-wrangling tasks easy
+and promote code reuse. Each script is supposed to do one thing well,
+following the principles of the UNIX philosophy of "doing one thing and
+doing it well".
 
 Design principles
 -----------------
@@ -15,14 +19,12 @@ Design principles
 List of tools
 -------------
 
-`pdf`. Compute pdf
+All the tools start with the abbreviated name of `datatools`, which is `d`.
 
-
-Examples
---------
-
-Compute pdf of column 3 of a CSV file:
-
-```
-cat data.csv | col 3 pdfpi
-```
+- `dbyrow` performs operations between elements of the same row.
+- `dcompute` performs operations which involve one field of multiple rows (for example, the average).
+- `dformat` (TO DO) translate existing formats to a standard CSV format.
+- `djoin` performs equality joins between tables, both in semi-streaming and full-streaming fashions.
+- `drandom` generates random integer and float values.
+- `dunique` keeps unique values.
+- `djsonexplorer` loads a JSON document into a Python interpreter.
