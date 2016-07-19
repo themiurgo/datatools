@@ -41,14 +41,12 @@ BYROW_FUNCTIONS = {
     'flatten',
 }
 
-FTYPE = click.File('r', encoding='utf-8')
+RFTYPE = click.File('r', encoding='utf-8')
+WFTYPE = click.File('w', encoding='utf-8'),
 
 
 @click.command()
-@click.argument('data', #type=click.Path(exists=True),
-                type=click.File('r', encoding='utf-8'),
-                default=sys.stdin
-               )
+@click.argument('data', type=RFTYPE, default=sys.stdin)
 def describe(data):
     values = [float(value) for value in data]
     print scipy.stats.describe(values)
@@ -56,7 +54,7 @@ def describe(data):
 
 @click.command()
 @click.argument('operation', type=click.Choice(['flatten']))
-@click.argument('data', type=FTYPE, default=sys.stdin)
+@click.argument('data', type=RFTYPE, default=sys.stdin)
 @click.option('--rowsep', default=',')
 def byrow(data, operation, rowsep):
     for line in data:
@@ -67,7 +65,7 @@ def byrow(data, operation, rowsep):
 
 # Strangely enough, this is quicker than `awk '!x[$0]++'`
 @click.command()
-@click.argument('data', type=FTYPE, default=sys.stdin)
+@click.argument('data', type=RFTYPE, default=sys.stdin)
 @click.option('--rowsep', default=',')
 def dunique(data, rowsep):
     seen = set()
@@ -80,7 +78,7 @@ def dunique(data, rowsep):
 
 @click.command()
 @click.argument('operation', type=click.Choice(COMPUTE_FUNCTIONS.keys()))
-@click.argument('data', type=FTYPE, default=sys.stdin)
+@click.argument('data', type=RFTYPE, default=sys.stdin)
 def compute(data, operation):
     func = COMPUTE_FUNCTIONS[operation]
     values = [float(value) for value in data]
@@ -88,8 +86,8 @@ def compute(data, operation):
 
 
 @click.command()
-@click.argument('left', type=float)
-@click.argument('right', type=float)
+@click.argument('minimum', type=float)
+@click.argument('maximum', type=float)
 @click.argument('num_values', type=int, default=1)
 @click.option('--seed', default=None)
 @click.option('--dtype', type=click.Choice(['int', 'float']), default='int')
@@ -102,29 +100,16 @@ def drandom(left, right, num_values, seed, dtype):
         random.seed(seed)
     for i in xrange(num_values):
         print rand_fun(left, right)
-    
+
 
 @click.command()
-@click.argument('left',
-                type=click.File('r', encoding='utf-8')
-                #type=click.Path(exists=True),
-                )
-@click.option('--lkey', '-1',
-              type=int,
-              default=0,
-              help="Left key")
-@click.argument('right',
-                #type=click.Path(exists=True),
-                type=click.File('r', encoding='utf-8'),
-                default=sys.stdin
-               )
-@click.option('--rkey', '-2',
-              type=int, default=0, help="Right key")
-@click.option('--show',
-              type=click.Choice(['left', 'right', 'both']),
+@click.argument('left', type=RFTYPE)
+@click.argument('right', type=RFTYPE, default=sys.stdin)
+@click.option('--lkey', '-1', type=int, default=0, help="Left key")
+@click.option('--rkey', '-2', type=int, default=0, help="Right key")
+@click.option('--show', type=click.Choice(['left', 'right', 'both']),
               default='both',
-              help="Show only left columns, right columns or both (default)",
-             )
+              help="Show only left columns, right columns or both (default)")
 @click.option('--sep', '-s', default=',', help="Separator")
 @click.option('--sortedinput', default=False, is_flag=True, help="Sorted")
 def join(left, lkey, right, rkey, sep, show, sortedinput):
@@ -180,6 +165,7 @@ def escape_char(line, char):
             yield field
 
 
+# Needs testing, perhaps refactoring too?
 def sorted_join(lkey, left, rkey, right):
     """Perform a join between two sequences sorted along their keys.
 
@@ -241,53 +227,39 @@ def sorted_join(lkey, left, rkey, right):
 		    if next_rkey == next_lkey:
 			yield (next_litem, next_ritem)
 		break
-	
+
 
 @click.command()
-@click.argument('jsonfile', #type=click.Path(exists=True),
-                type=click.File('r', encoding='utf-8'),
-                default=sys.stdin
-               )
+@click.argument('jsonfile', type=RFTYPE, default=sys.stdin)
 def jsonexplorer(jsonfile):
-    """Perform a join between two sequences sorted along their keys.
+    """Load json file and launch a Python interactive console.
 
-    This is useful when performing join over very large lists, as it is a full streaming join.
+    This command is useful to explore the structure of the JSON document.
 
     """
     data = json.loads(jsonfile.read())
     banner = "### The JSON file has been loaded into the variable `data`. ###"
     code.interact(banner=banner, local=locals())
-    #code.InteractiveConsole(locals=globals()).interact()
 
 
 @click.command()
-@click.option('--patterns',
-                type=click.File('r', encoding='utf-8')
-                #type=click.Path(exists=True),
-                )
-@click.option('--key', '-1',
-              type=int,
-              default=0,
-              help="Key")
-@click.argument('infile',
-                #type=click.Path(exists=True),
-                type=click.File('r', encoding='utf-8'),
-                default=sys.stdin
-               )
-@click.argument('outfile',
-                type=click.File('w', encoding='utf-8'),
-                #type=click.Path(exists=True),
-                default=sys.stdout,
-                )
-def grep(patterns, key, infile, outfile):
-    """Data grep.
-
-    """
-    patterns = [line.strip() for line in patterns]
+@click.argument('infile', type=RFTYPE, default=sys.stdin)
+@click.option('--outfile', '-o', type=WFTYPE, default=sys.stdout)
+@click.option('--patterns', '-f', type=RFTYPE)
+@click.option('--value', '-v', type=str)
+@click.option('--key', '-k', type=int, default=0, help="Field key, 0-based")
+def grep(patterns, value,key, infile, outfile=sys.stdout):
+    """Search for one or many values in a specific field."""
+    if not (patterns or value):
+        raise click.UsageError("Need to specify value (-v) or pattern file (-f)")
+    if patterns:
+        patterns = set([line.strip() for line in patterns])
+    else:
+        patterns = set([value, ])
     reader = csv.reader(infile)
     writer = csv.writer(outfile)
     for row in reader:
         if row[key] in patterns:
             writer.writerow(row)
-            # click.echo(row)
-    #code.InteractiveConsole(locals=globals()).interact()
+
+
