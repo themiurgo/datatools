@@ -54,10 +54,10 @@ def describe(data):
 
 
 @click.command()
-@click.argument('operation', type=click.Choice(['flatten']))
 @click.argument('data', type=RFTYPE, default=sys.stdin)
-@click.option('--rowsep', default=',')
-def byrow(data, operation, rowsep):
+@click.option('--rowsep', '-s', default=',')
+@click.option('function', '-f', type=click.Choice(['flatten']), required=True)
+def byrow(data, function, rowsep):
     for line in data:
         line = line.rstrip("\n")
         values = line.split(rowsep)
