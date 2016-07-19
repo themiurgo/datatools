@@ -1,7 +1,7 @@
 "d" for "Data Tools"
 ====================
 
-Data tools (or, for friend, `d`) is a command-line-first data analysis
+Data tools (or, for friends, `d`) is a command-line-first data analysis
 library. The goal of the library is to make data-wrangling tasks easy
 and promote code reuse. Each script is supposed to do one thing well,
 following the principles of the UNIX philosophy of "doing one thing and

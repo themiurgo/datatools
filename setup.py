@@ -3,9 +3,9 @@
 from setuptools import find_packages, setup
 
 setup(name = 'datatools',
-    version = '0.1',
+    version = '0.1.3',
     description = "Data Tools",
-    long_description = "Data Tools",
+    long_description=open('README.md').read(),
     author="Antonio Lima",
     author_email="anto87@gmail.com",
     url="http://github.com/themiurgo/datatools",
@@ -24,6 +24,13 @@ setup(name = 'datatools',
             'drandom = datatools.cli:drandom',
         ],
     },
+    install_requires=[
+        'click',
+        'numpy',
+        'scipy',
+        'six',
+        'toolz',
+    ],
     scripts=[
         'datatools/external/cols',
         'datatools/external/body',
