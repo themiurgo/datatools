@@ -35,6 +35,7 @@ COMPUTE_FUNCTIONS = {
     'mean': np.mean,
     'max': max,
     'min': min,
+    'median': np.median,
 }
 
 BYROW_FUNCTIONS = {
@@ -77,10 +78,17 @@ def dunique(data, rowsep):
 
 
 @click.command()
-@click.argument('operation', type=click.Choice(COMPUTE_FUNCTIONS.keys()))
 @click.argument('data', type=RFTYPE, default=sys.stdin)
-def compute(data, operation):
-    func = COMPUTE_FUNCTIONS[operation]
+@click.option('--function', '-f', type=click.Choice(COMPUTE_FUNCTIONS.keys()), required=True)
+@click.option('--key', '-k', type=int, default=0, help="Field key, 0-based")
+def compute(data, function, key):
+    """Calculate some measures.
+
+    For single-value measures (like average or median, for example) you need
+    to specify only one key.
+
+    """
+    func = COMPUTE_FUNCTIONS[function]
     values = [float(value) for value in data]
     print func(values)
 
@@ -90,8 +98,9 @@ def compute(data, operation):
 @click.argument('maximum', type=float)
 @click.argument('num_values', type=int, default=1)
 @click.option('--seed', default=None)
-@click.option('--dtype', type=click.Choice(['int', 'float']), default='int')
-def drandom(left, right, num_values, seed, dtype):
+@click.option('--dtype', '-t', type=click.Choice(['int', 'float']), default='int')
+def drandom(minimum, maximum, num_values, seed, dtype):
+    """Generate random values."""
     rand_fun = {
         'int': random.randint,
         'float': random.uniform,
@@ -99,7 +108,7 @@ def drandom(left, right, num_values, seed, dtype):
     if seed:
         random.seed(seed)
     for i in xrange(num_values):
-        print rand_fun(left, right)
+        print rand_fun(minimum, maximum)
 
 
 @click.command()
