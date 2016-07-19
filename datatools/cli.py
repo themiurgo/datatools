@@ -56,12 +56,30 @@ def describe(data):
 @click.command()
 @click.argument('data', type=RFTYPE, default=sys.stdin)
 @click.option('--rowsep', '-s', default=',')
-@click.option('function', '-f', type=click.Choice(['flatten']), required=True)
+@click.option('--function', '-f', type=click.Choice(COMPUTE_FUNCTIONS), required=True)
+def dformat(data, outfile, function, rowsep):
+    """Convert data from one format to another, optionally apply another command and output
+    everything either in the original or the transformed format."""
+    raise NotImplementedError
+    reader = csv.reader(data)
+    writer = csv.writer(outfile)
+    for row in reader:
+	writer.writerow(row)
+
+
+@click.command()
+@click.argument('data', type=RFTYPE, default=sys.stdin)
+@click.option('--rowsep', '-s', default=',')
+@click.option('--function', '-f', type=click.Choice(COMPUTE_FUNCTIONS), required=True)
 def byrow(data, function, rowsep):
-    for line in data:
-        line = line.rstrip("\n")
-        values = line.split(rowsep)
-        print "\n".join(values)
+    reader = csv.reader(data)
+    func = COMPUTE_FUNCTIONS[function]
+    for row in reader:
+	values = [float(value) for value in row]
+	print func(values)
+        #line = line.rstrip("\n")
+        #values = line.split(rowsep)
+        #print "\n".join(values)
 
 
 # Strangely enough, this is quicker than `awk '!x[$0]++'`
@@ -270,5 +288,3 @@ def grep(patterns, value,key, infile, outfile=sys.stdout):
     for row in reader:
         if row[key] in patterns:
             writer.writerow(row)
-
-
