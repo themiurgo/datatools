@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+import collections
 import csv
 import code
 import json
@@ -50,7 +53,7 @@ WFTYPE = click.File('w', encoding='utf-8'),
 @click.argument('data', type=RFTYPE, default=sys.stdin)
 def describe(data):
     values = [float(value) for value in data]
-    print scipy.stats.describe(values)
+    print(scipy.stats.describe(values))
 
 
 @click.command()
@@ -76,7 +79,7 @@ def byrow(data, function, rowsep):
     func = COMPUTE_FUNCTIONS[function]
     for row in reader:
 	values = [float(value) for value in row]
-	print func(values)
+	print(func(values))
         #line = line.rstrip("\n")
         #values = line.split(rowsep)
         #print "\n".join(values)
@@ -92,7 +95,7 @@ def dunique(data, rowsep):
         line = line.rstrip("\n")
         if line not in seen:
             seen.add(line)
-            print line
+            print(line)
 
 
 @click.command()
@@ -108,7 +111,7 @@ def compute(data, function, key):
     """
     func = COMPUTE_FUNCTIONS[function]
     values = [float(value) for value in data]
-    print func(values)
+    print(func(values))
 
 
 @click.command()
@@ -126,7 +129,7 @@ def drandom(minimum, maximum, num_values, seed, dtype):
     if seed:
         random.seed(seed)
     for i in xrange(num_values):
-        print rand_fun(minimum, maximum)
+        print(rand_fun(minimum, maximum))
 
 
 @click.command()
