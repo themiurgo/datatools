@@ -22,6 +22,7 @@ setup(name = 'datatools',
             'djsonexplorer = datatools.cli:jsonexplorer',
             'dunique = datatools.cli:dunique',
             'drandom = datatools.cli:drandom',
+            'dcount = datatools.cli:count',
         ],
     },
     install_requires=[

@@ -50,6 +50,16 @@ WFTYPE = click.File('w', encoding='utf-8'),
 
 
 @click.command()
+@click.option('--sep', '-s', default=u',', help="Separator")
+def count(infile=sys.stdin, outfile=sys.stdout, sep=u","):
+    infile = (line.rstrip('\n') for line in infile)
+    cdict = collections.Counter(infile)
+    writer = csv.writer(outfile, delimiter=sep.encode('ascii', 'replace'))
+    for entry, count in cdict.most_common():
+        writer.writerow([entry, count])
+
+
+@click.command()
 @click.argument('data', type=RFTYPE, default=sys.stdin)
 def describe(data):
     values = [float(value) for value in data]
