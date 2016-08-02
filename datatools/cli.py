@@ -39,6 +39,7 @@ COMPUTE_FUNCTIONS = {
     'max': max,
     'min': min,
     'median': np.median,
+    'std': np.std,
 }
 
 BYROW_FUNCTIONS = {
@@ -47,6 +48,15 @@ BYROW_FUNCTIONS = {
 
 RFTYPE = click.File('r', encoding='utf-8')
 WFTYPE = click.File('w', encoding='utf-8'),
+
+
+def get_valid_values(iterdata):
+    for i, value in enumerate(iterdata):
+        value = value.strip()
+        try:
+            yield float(value)
+        except ValueError:
+            print("Warning: value `{}` in position {} is not valid. Ignoring.".format(value, i))
 
 
 @click.command()
@@ -62,7 +72,7 @@ def count(infile=sys.stdin, outfile=sys.stdout, sep=u","):
 @click.command()
 @click.argument('data', type=RFTYPE, default=sys.stdin)
 def describe(data):
-    values = [float(value) for value in data]
+    values = list(get_valid_values(data))
     print(scipy.stats.describe(values))
 
 
@@ -88,7 +98,7 @@ def byrow(data, function, rowsep):
     reader = csv.reader(data)
     func = COMPUTE_FUNCTIONS[function]
     for row in reader:
-	values = [float(value) for value in row]
+        values = list(get_valid_values(row))
 	print(func(values))
         #line = line.rstrip("\n")
         #values = line.split(rowsep)
@@ -120,7 +130,7 @@ def compute(data, function, key):
 
     """
     func = COMPUTE_FUNCTIONS[function]
-    values = [float(value) for value in data]
+    values = list(get_valid_values(data))
     print(func(values))
 
 
