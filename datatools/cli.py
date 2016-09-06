@@ -216,6 +216,7 @@ def escape_char(line, char):
 
 
 # Needs testing, perhaps refactoring too?
+# See https://en.wikipedia.org/wiki/Sort-merge_join
 def sorted_join(lkey, left, rkey, right):
     """Perform a join between two sequences sorted along their keys.
 
@@ -227,56 +228,21 @@ def sorted_join(lkey, left, rkey, right):
     if not callable(rkey):
         rkey = toolz.itertoolz.getter(rkey)
 
-    left = toolz.sliding_window(2, left)
-    right = toolz.sliding_window(2, right)
+    left_grouped = itertools.groupby(left, lkey)
+    right_grouped = itertools.groupby(right, rkey)
 
-    cur_litem, next_litem = next(left)
-    cur_ritem, next_ritem = next(right)
-    cur_lkey = lkey(cur_litem)
-    cur_rkey = rkey(cur_ritem)
-    next_lkey = lkey(next_litem)
-    next_rkey = rkey(next_ritem)
-
-    # Compare left and right row by row
-    # Always advance lowest "next index"
+    left_key, left_group = next(left_grouped)
+    right_key, right_group = next(right_grouped)
     while True:
-	#print cur_lkey, cur_rkey
-
-	if cur_rkey == cur_lkey:
-            yield (cur_litem, cur_ritem)
-
-	# Advance lowest index, advance both if equal
-	if next_lkey <= next_rkey:
-	    try:
-		cur_litem, next_litem = next(left)
-		cur_lkey = lkey(cur_litem)
-		next_lkey = lkey(next_litem)
-	    except StopIteration:
-		if next_rkey == cur_lkey:
-		    yield (cur_litem, next_ritem)
-		if next_rkey == next_lkey:
-		    yield (next_litem, next_ritem)
-		for _, next_ritem in right:
-		    next_rkey = rkey(next_ritem)
-		    if next_rkey == next_lkey:
-			yield (next_litem, next_ritem)
-	elif next_lkey > next_rkey:
-	    try:
-		cur_ritem, next_ritem = next(right)
-		cur_rkey = rkey(cur_ritem)
-		next_rkey = rkey(next_ritem)
-	    except StopIteration:
-		if cur_lkey == next_rkey:
-		    yield (cur_litem, next_ritem)
-		if next_lkey == cur_rkey:
-		    yield (next_litem, cur_ritem)
-		if next_lkey == next_rkey:
-		    yield (next_litem, next_ritem)
-		for _, next_litem in left:
-		    next_lkey = lkey(next_litem)
-		    if next_rkey == next_lkey:
-			yield (next_litem, next_ritem)
-		break
+        if left_key == right_key:
+            for a, b in itertools.product(left_group, right_group):
+                yield (a, b)
+            left_key, left_group = next(left_grouped)
+            right_key, right_group = next(right_grouped)
+        elif left_key < right_key:
+            left_key, left_group = next(left_grouped)
+        else:
+            right_key, right_group = next(right_grouped)
 
 
 @click.command()
